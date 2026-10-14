@@ -1,0 +1,23 @@
+{
+  "name": "marephraem-ideathon-2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-Stack Registration, Administration, Reporting, and PDF Management Platform for MAREPHRAEM IDEATHON 2026",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "build:server": "npm --prefix server install && npm --prefix server run build",
+    "build:client": "npm --prefix client install && npm --prefix client run build",
+    "start": "npm --prefix server run start",
+    "start:server": "npm --prefix server run start",
+    "test": "npm --prefix server test && npm --prefix client test",
+    "seed": "npm --prefix server run seed",
+    "seed:admin": "npm --prefix server run seed:admin"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 130" fill="none">
+  <defs>
+    <linearGradient id="favOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7b00" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+    <linearGradient id="favBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Orange Half -->
+  <path d="M 60 10 C 38 10 22 26 22 48 C 22 64 30 76 38 88 L 46 100" 
+        stroke="url(#favOrange)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 34 38 L 48 52 L 48 68" 
+        stroke="url(#favOrange)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="48" cy="68" r="4" fill="#ea580c" />
+  <circle cx="34" cy="38" r="4" fill="#ff7b00" />
+  <path d="M 58 20 L 50 28 L 50 48 L 40 58" 
+        stroke="url(#favOrange)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="40" cy="58" r="4" fill="#ea580c" />
+
+  <!-- Blue Half -->
+  <path d="M 60 10 C 82 10 98 26 98 48 C 98 64 90 76 82 88 L 74 100" 
+        stroke="url(#favBlue)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 68 26 L 68 50 L 78 60 L 78 76" 
+        stroke="url(#favBlue)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="68" cy="26" r="4" fill="#38bdf8" />
+  <circle cx="78" cy="76" r="4" fill="#0284c7" />
+  <path d="M 86 44 L 76 54 L 76 78 L 68 86" 
+        stroke="url(#favBlue)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="86" cy="44" r="4" fill="#38bdf8" />
+  <circle cx="68" cy="86" r="4" fill="#0284c7" />
+
+  <!-- Base -->
+  <rect x="46" y="103" width="28" height="6.5" rx="3.25" fill="url(#favBlue)" />
+  <rect x="49" y="112" width="22" height="5.5" rx="2.75" fill="url(#favBlue)" />
+  <path d="M 54 120 Q 60 124 66 120 Z" fill="#0369a1" />
+</svg>
