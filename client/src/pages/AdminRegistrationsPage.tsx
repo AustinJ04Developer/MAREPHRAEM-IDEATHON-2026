@@ -23,6 +23,12 @@ import { api } from '../api/client';
 import { Registration, ProblemArea } from '../types';
 import { useToast } from '../context/ToastContext';
 import { ConfirmationModal } from '../components/ConfirmationModal';
+import {
+  INSTITUTIONAL_DEPARTMENTS,
+  INSTITUTIONAL_SECTIONS,
+  DepartmentOption,
+  findCanonicalDepartment,
+} from '../constants/academic';
 
 export const AdminRegistrationsPage: React.FC = () => {
   const { success, error: toastError } = useToast();
@@ -53,17 +59,17 @@ export const AdminRegistrationsPage: React.FC = () => {
 
   // Fetch problem areas once
   useEffect(() => {
-    const fetchAreas = async () => {
+    const fetchMetadata = async () => {
       try {
-        const res = await api.get('/problem-areas');
-        if (res.data?.success && res.data?.data) {
-          setProblemAreas(res.data.data);
+        const areasRes = await api.get('/problem-areas');
+        if (areasRes.data?.success && areasRes.data?.data) {
+          setProblemAreas(areasRes.data.data);
         }
       } catch (err) {
-        console.error('Failed to load problem areas:', err);
+        console.error('Failed to load metadata:', err);
       }
     };
-    fetchAreas();
+    fetchMetadata();
   }, []);
 
   // Fetch registrations
@@ -209,7 +215,7 @@ export const AdminRegistrationsPage: React.FC = () => {
           </button>
         </form>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 border-t border-slate-100 text-xs">
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Problem Area Track</label>
             <select
@@ -224,6 +230,44 @@ export const AdminRegistrationsPage: React.FC = () => {
               {problemAreas.map((area) => (
                 <option key={area._id} value={area.name}>
                   {area.name} ({area.abbreviation})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Department</label>
+            <select
+              value={selectedDept}
+              onChange={(e) => {
+                setSelectedDept(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
+            >
+              <option value="all">All Departments</option>
+              {INSTITUTIONAL_DEPARTMENTS.map((dept) => (
+                <option key={dept.code} value={dept.name}>
+                  {dept.name} ({dept.abbreviation})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Section</label>
+            <select
+              value={selectedSection}
+              onChange={(e) => {
+                setSelectedSection(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
+            >
+              <option value="all">All Sections</option>
+              {INSTITUTIONAL_SECTIONS.map((sec) => (
+                <option key={sec} value={sec}>
+                  Section {sec}
                 </option>
               ))}
             </select>
@@ -712,23 +756,78 @@ export const AdminRegistrationsPage: React.FC = () => {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">Department</label>
+                  <select
+                    value={
+                      INSTITUTIONAL_DEPARTMENTS.some(
+                        (d) =>
+                          d.name.toLowerCase() === (editingReg.department || '').toLowerCase() ||
+                          d.abbreviation.toLowerCase() === (editingReg.department || '').toLowerCase()
+                      )
+                        ? INSTITUTIONAL_DEPARTMENTS.find(
+                            (d) =>
+                              d.name.toLowerCase() === (editingReg.department || '').toLowerCase() ||
+                              d.abbreviation.toLowerCase() === (editingReg.department || '').toLowerCase()
+                          )?.name
+                        : editingReg.department
+                        ? 'OTHER'
+                        : ''
+                    }
+                    onChange={(e) => {
+                      if (e.target.value !== 'OTHER') {
+                        setEditingReg({ ...editingReg, department: e.target.value });
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-times mb-1.5 text-xs"
+                  >
+                    {INSTITUTIONAL_DEPARTMENTS.map((dept) => (
+                      <option key={dept.code} value={dept.name}>
+                        {dept.name} ({dept.abbreviation})
+                      </option>
+                    ))}
+                    <option value="OTHER">Custom Department</option>
+                  </select>
                   <input
                     type="text"
                     value={editingReg.department}
                     onChange={(e) => setEditingReg({ ...editingReg, department: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-times"
+                    placeholder="Enter Department Name"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-times text-xs"
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">Section</label>
+                  <select
+                    value={
+                      INSTITUTIONAL_SECTIONS.includes((editingReg.section || '').toUpperCase())
+                        ? (editingReg.section || '').toUpperCase()
+                        : editingReg.section
+                        ? 'OTHER'
+                        : ''
+                    }
+                    onChange={(e) => {
+                      if (e.target.value !== 'OTHER') {
+                        setEditingReg({ ...editingReg, section: e.target.value });
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-times mb-1.5 text-xs"
+                  >
+                    {INSTITUTIONAL_SECTIONS.map((sec) => (
+                      <option key={sec} value={sec}>
+                        Section {sec}
+                      </option>
+                    ))}
+                    <option value="OTHER">Custom Section</option>
+                  </select>
                   <input
                     type="text"
                     value={editingReg.section}
-                    onChange={(e) => setEditingReg({ ...editingReg, section: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-times"
-                    required
+                    onChange={(e) =>
+                      setEditingReg({ ...editingReg, section: e.target.value.toUpperCase() })
+                    }
+                    placeholder="e.g. A"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-times text-xs uppercase"
                   />
                 </div>
 

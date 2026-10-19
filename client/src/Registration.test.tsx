@@ -24,6 +24,10 @@ describe('Registration Form & Admin Login Components', () => {
     expect(screen.getByText(/4. Project & Problem Statement Vertical/i)).toBeInTheDocument();
     expect(screen.getByText(/5. Faculty Supervisor Mentorship/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Submit Official Registration/i })).toBeInTheDocument();
+
+    // Verify Department & Section dropdown setup
+    const selects = screen.getAllByRole('combobox');
+    expect(selects.length).toBeGreaterThanOrEqual(4); // Category, Team Dept, Team Sec, Member Dept, Member Year, Member Sec
   });
 
   it('renders Admin Login page with credentials inputs and rate-limit indicator', () => {

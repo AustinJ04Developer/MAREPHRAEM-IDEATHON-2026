@@ -9,6 +9,8 @@ import { getReportSettings, serveHeaderImage } from '../controllers/settings.con
 import { downloadRegistrationPdf } from '../controllers/registration.controller.js';
 import { registrationLimiter } from '../middleware/rateLimiter.middleware.js';
 
+import { INSTITUTIONAL_DEPARTMENTS, INSTITUTIONAL_SECTIONS } from '../constants/academic.js';
+
 export const publicRouter = Router();
 
 publicRouter.get('/health', (req, res) => {
@@ -16,6 +18,16 @@ publicRouter.get('/health', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     event: 'Marephraem Ideasource 2026',
+  });
+});
+
+publicRouter.get('/academic-options', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      departments: INSTITUTIONAL_DEPARTMENTS,
+      sections: INSTITUTIONAL_SECTIONS,
+    },
   });
 });
 

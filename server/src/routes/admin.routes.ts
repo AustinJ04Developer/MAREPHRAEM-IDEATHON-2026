@@ -20,6 +20,7 @@ import {
   getConsolidatedReportData,
   exportRegistrationsCsv,
   exportConsolidatedPdf,
+  getReportFilterOptions,
 } from '../controllers/report.controller.js';
 import {
   getReportSettings,
@@ -52,6 +53,7 @@ adminRouter.get('/registrations/:id/pdf', requireAdmin, downloadRegistrationPdf)
 
 // ================= Reporting & Exports =================
 adminRouter.get('/reports/consolidated', requireAdmin, getConsolidatedReportData);
+adminRouter.get('/reports/filter-options', requireAdmin, getReportFilterOptions);
 adminRouter.get('/reports/registrations.csv', requireAdmin, exportRegistrationsCsv);
 adminRouter.get('/reports/registrations.pdf', requireAdmin, exportConsolidatedPdf);
 

@@ -3,6 +3,7 @@ import { Registration } from '../models/Registration.js';
 import { ReportSettings } from '../models/ReportSettings.js';
 import { registrationUpdateSchema } from '../validators/index.js';
 import { generateIndividualRegistrationPdf } from '../services/pdf.service.js';
+import { buildDepartmentConditions, buildSectionConditions } from '../constants/academic.js';
 
 export async function listRegistrations(
   req: Request,
@@ -26,48 +27,57 @@ export async function listRegistrations(
       sortOrder = 'desc',
     } = req.query;
 
-    const query: any = { deletedAt: null };
+    const conditions: any[] = [{ deletedAt: null }];
 
     // Search query across Project ID, Team Name, Project Title, Team Leader, Member Name, Reg No
     if (search && typeof search === 'string' && search.trim()) {
       const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { projectId: searchRegex },
-        { teamName: searchRegex },
-        { projectTitle: searchRegex },
-        { teamLeaderName: searchRegex },
-        { teamLeaderRegisterNumber: searchRegex },
-        { 'members.memberName': searchRegex },
-        { 'members.registerNumber': searchRegex },
-        { supervisorName: searchRegex },
-      ];
+      conditions.push({
+        $or: [
+          { projectId: searchRegex },
+          { teamName: searchRegex },
+          { projectTitle: searchRegex },
+          { teamLeaderName: searchRegex },
+          { teamLeaderRegisterNumber: searchRegex },
+          { 'members.memberName': searchRegex },
+          { 'members.registerNumber': searchRegex },
+          { supervisorName: searchRegex },
+        ],
+      });
     }
 
     // Filters
     if (problemArea && typeof problemArea === 'string' && problemArea !== 'all') {
-      query.$or = [
-        { categoryNameSnapshot: problemArea },
-        { categoryAbbreviationSnapshot: problemArea.toUpperCase() },
-      ];
+      const escapedArea = problemArea.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      conditions.push({
+        $or: [
+          { categoryNameSnapshot: new RegExp(`^${escapedArea}$`, 'i') },
+          { categoryAbbreviationSnapshot: new RegExp(`^${escapedArea}$`, 'i') },
+          { categoryCodeSnapshot: new RegExp(`^${escapedArea}$`, 'i') },
+        ],
+      });
     }
 
     if (department && typeof department === 'string' && department !== 'all') {
-      query.department = department;
+      conditions.push(buildDepartmentConditions(department));
     }
 
     if (section && typeof section === 'string' && section !== 'all') {
-      query.section = section;
+      conditions.push(buildSectionConditions(section));
     }
 
     if (fieldVisitStatus && (fieldVisitStatus === 'Yes' || fieldVisitStatus === 'No')) {
-      query.fieldVisitStatus = fieldVisitStatus;
+      conditions.push({ fieldVisitStatus });
     }
 
     if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate as string);
-      if (endDate) query.createdAt.$lte = new Date(endDate as string);
+      const dateFilter: any = {};
+      if (startDate) dateFilter.$gte = new Date(startDate as string);
+      if (endDate) dateFilter.$lte = new Date(endDate as string);
+      conditions.push({ createdAt: dateFilter });
     }
+
+    const query = conditions.length === 1 ? conditions[0] : { $and: conditions };
 
     // Sorting
     const sortField = typeof sortBy === 'string' ? sortBy : 'createdAt';

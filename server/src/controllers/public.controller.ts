@@ -144,7 +144,11 @@ export async function createRegistration(
       teamLeaderName: leaderMember.memberName,
       teamLeaderRegisterNumber: leaderMember.registerNumber,
       department: validatedData.department,
-      section: validatedData.section,
+      section:
+        (validatedData.section && validatedData.section.trim()) ||
+        (leaderMember && leaderMember.section && leaderMember.section.trim()) ||
+        (membersWithLeader[0] && membersWithLeader[0].section && membersWithLeader[0].section.trim()) ||
+        '',
 
       members: membersWithLeader,
 

@@ -13,6 +13,12 @@ import {
 import { api } from '../api/client';
 import { Registration, ProblemArea, ReportSettings } from '../types';
 import { useToast } from '../context/ToastContext';
+import {
+  INSTITUTIONAL_DEPARTMENTS,
+  INSTITUTIONAL_SECTIONS,
+  DepartmentOption,
+  findCanonicalDepartment,
+} from '../constants/academic';
 
 export const AdminReportsPage: React.FC = () => {
   const { error: toastError } = useToast();
@@ -247,24 +253,34 @@ export const AdminReportsPage: React.FC = () => {
 
           <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1">Department</label>
-            <input
-              type="text"
-              value={department === 'all' ? '' : department}
-              onChange={(e) => setDepartment(e.target.value || 'all')}
-              placeholder="e.g. CSE or MECH (optional)"
+            <select
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
-            />
+            >
+              <option value="all">All Departments</option>
+              {INSTITUTIONAL_DEPARTMENTS.map((dept) => (
+                <option key={dept.code} value={dept.name}>
+                  {dept.name} ({dept.abbreviation})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-[11px] font-bold text-slate-600 mb-1">Section</label>
-            <input
-              type="text"
-              value={section === 'all' ? '' : section}
-              onChange={(e) => setSection(e.target.value || 'all')}
-              placeholder="e.g. A or B (optional)"
+            <select
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
-            />
+            >
+              <option value="all">All Sections</option>
+              {INSTITUTIONAL_SECTIONS.map((sec) => (
+                <option key={sec} value={sec}>
+                  Section {sec}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -339,6 +355,35 @@ export const AdminReportsPage: React.FC = () => {
             </span>
             <span>Total Enrolled Teams: {registrations.length}</span>
           </div>
+
+          {(department !== 'all' ||
+            section !== 'all' ||
+            problemArea !== 'all' ||
+            fieldVisitStatus !== 'all') && (
+            <div className="pt-2 text-[10px] text-slate-700 font-medium flex flex-wrap gap-x-3 gap-y-1 bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200">
+              <span className="font-bold text-slate-900">Active Filters:</span>
+              {department !== 'all' && (
+                <span>
+                  Department: <strong>{department}</strong>
+                </span>
+              )}
+              {section !== 'all' && (
+                <span>
+                  Section: <strong>{section}</strong>
+                </span>
+              )}
+              {problemArea !== 'all' && (
+                <span>
+                  Problem Area: <strong>{problemArea}</strong>
+                </span>
+              )}
+              {fieldVisitStatus !== 'all' && (
+                <span>
+                  Field Visit: <strong>{fieldVisitStatus}</strong>
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Data Table */}
@@ -393,7 +438,10 @@ export const AdminReportsPage: React.FC = () => {
                       ))}
                     </td>
                     <td className="p-2.5 border-r border-slate-200">
-                      {reg.department} ({reg.section})
+                      <div className="font-semibold text-slate-800">{reg.department}</div>
+                      <div className="text-[10px] text-slate-500 font-mono">
+                        {reg.section ? `Section ${reg.section.toUpperCase()}` : 'General'}
+                      </div>
                     </td>
                     <td className="p-2.5 border-r border-slate-200 font-medium text-slate-900">
                       {reg.projectTitle}

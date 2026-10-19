@@ -19,6 +19,10 @@ import { api } from '../api/client';
 import { ProblemArea, TeamMember } from '../types';
 import { useToast } from '../context/ToastContext';
 import { BrandEmblem } from '../components/BrandEmblem';
+import {
+  INSTITUTIONAL_DEPARTMENTS,
+  INSTITUTIONAL_SECTIONS,
+} from '../constants/academic';
 
 export const RegistrationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,21 +36,54 @@ export const RegistrationPage: React.FC = () => {
 
   // Form State
   const [teamName, setTeamName] = useState<string>('');
-  const [department, setDepartment] = useState<string>('');
+  const [department, setDepartment] = useState<string>('Computer Science and Engineering');
+  const [customDepartment, setCustomDepartment] = useState<string>('');
+  const [section, setSection] = useState<string>('A');
+  const [customSection, setCustomSection] = useState<string>('');
 
   // Members list - starts with Member 1 with complete details including email, phone, and year
   const [members, setMembers] = useState<TeamMember[]>([
     {
       memberName: '',
-      department: '',
+      department: 'Computer Science and Engineering',
       year: '3rd Year',
       registerNumber: '',
-      section: '',
+      section: 'A',
       email: '',
       phone: '',
       isLeader: true,
     },
   ]);
+
+  // Synchronize team department changes with leader/first member if still unset or default
+  const handleTeamDepartmentChange = (newDept: string) => {
+    setDepartment(newDept);
+    const eff = newDept === 'OTHER' ? customDepartment : newDept;
+    if (eff) {
+      setMembers((prev) => {
+        const copy = [...prev];
+        if (copy[0] && (!copy[0].department || copy[0].department === department)) {
+          copy[0] = { ...copy[0], department: eff };
+        }
+        return copy;
+      });
+    }
+  };
+
+  // Synchronize team section changes with leader/first member if still unset or default
+  const handleTeamSectionChange = (newSec: string) => {
+    setSection(newSec);
+    const eff = newSec === 'OTHER' ? customSection : newSec;
+    if (eff) {
+      setMembers((prev) => {
+        const copy = [...prev];
+        if (copy[0] && (!copy[0].section || copy[0].section === section)) {
+          copy[0] = { ...copy[0], section: eff };
+        }
+        return copy;
+      });
+    }
+  };
 
   // Explicit Team Leader selection index (0-based)
   const [leaderIndex, setLeaderIndex] = useState<number>(0);
@@ -158,14 +195,16 @@ export const RegistrationPage: React.FC = () => {
       toastError('A team can have a maximum of 10 members.');
       return;
     }
+    const effDept = department === 'OTHER' ? customDepartment.trim() : department.trim();
+    const effSec = (section === 'OTHER' ? customSection.trim() : section.trim()).toUpperCase();
     setMembers((prev) => [
       ...prev,
       {
         memberName: '',
-        department: department || '',
+        department: effDept || 'Computer Science and Engineering',
         year: '3rd Year',
         registerNumber: '',
-        section: '',
+        section: effSec || 'A',
         email: '',
         phone: '',
         isLeader: false,
@@ -203,8 +242,14 @@ export const RegistrationPage: React.FC = () => {
       errors.teamName = 'Team name must be at least 2 characters.';
     }
 
-    if (!department.trim()) {
+    const effDept = department === 'OTHER' ? customDepartment.trim() : department.trim();
+    if (!effDept) {
       errors.department = 'Team department is required.';
+    }
+
+    const effSec = section === 'OTHER' ? customSection.trim() : section.trim();
+    if (!effSec) {
+      errors.section = 'Team section is required.';
     }
 
     if (!projectTitle.trim() || projectTitle.trim().length < 3) {
@@ -288,18 +333,21 @@ export const RegistrationPage: React.FC = () => {
     try {
       const selectedLeader = members[leaderIndex];
       const leaderEmailAddress = (selectedLeader?.email || '').trim().toLowerCase();
+      const effectiveDepartment = department === 'OTHER' ? customDepartment.trim() : department.trim();
+      const effectiveSection = (section === 'OTHER' ? customSection.trim() : section.trim()).toUpperCase();
 
       const payload = {
         teamName: teamName.trim(),
         contactEmail: leaderEmailAddress,
-        department: department.trim(),
+        department: effectiveDepartment,
+        section: effectiveSection,
         teamLeaderIndex: leaderIndex,
         members: members.map((m, idx) => ({
           memberName: m.memberName.trim(),
           department: m.department.trim(),
           year: (m.year || '3rd Year').trim(),
           registerNumber: m.registerNumber.trim().toUpperCase(),
-          section: (m.section || '').trim(),
+          section: (m.section || effectiveSection || 'A').trim().toUpperCase(),
           email: m.email?.trim().toLowerCase() || '',
           phone: m.phone?.trim() || '',
           isLeader: idx === leaderIndex,
@@ -373,7 +421,7 @@ export const RegistrationPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 font-times">
                 Team Name <span className="text-rose-500">*</span>
@@ -396,17 +444,74 @@ export const RegistrationPage: React.FC = () => {
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 font-times">
                 Department <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
+              <select
                 value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Computer Science and Engineering"
-                className={`w-full px-3.5 py-2.5 rounded-lg bg-white border text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors ${
+                onChange={(e) => handleTeamDepartmentChange(e.target.value)}
+                className={`w-full px-3.5 py-2.5 rounded-lg bg-white border text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors ${
                   formErrors.department ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
                 }`}
-              />
+              >
+                {INSTITUTIONAL_DEPARTMENTS.map((dept) => (
+                  <option key={dept.code} value={dept.name}>
+                    {dept.name} ({dept.abbreviation})
+                  </option>
+                ))}
+                <option value="OTHER">Other Department (Specify)</option>
+              </select>
+              {department === 'OTHER' && (
+                <input
+                  type="text"
+                  value={customDepartment}
+                  onChange={(e) => {
+                    setCustomDepartment(e.target.value);
+                    if (members[0] && members[0].department === customDepartment) {
+                      handleMemberChange(0, 'department', e.target.value);
+                    }
+                  }}
+                  placeholder="Enter Department Name"
+                  className="w-full mt-2 px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600"
+                />
+              )}
               {formErrors.department && (
                 <p className="text-xs text-rose-600 mt-1">{formErrors.department}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 font-times">
+                Section <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={section}
+                onChange={(e) => handleTeamSectionChange(e.target.value)}
+                className={`w-full px-3.5 py-2.5 rounded-lg bg-white border text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors ${
+                  formErrors.section ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
+                }`}
+              >
+                {INSTITUTIONAL_SECTIONS.map((sec) => (
+                  <option key={sec} value={sec}>
+                    Section {sec}
+                  </option>
+                ))}
+                <option value="OTHER">Other Section (Specify)</option>
+              </select>
+              {section === 'OTHER' && (
+                <input
+                  type="text"
+                  value={customSection}
+                  onChange={(e) => {
+                    const up = e.target.value.toUpperCase();
+                    setCustomSection(up);
+                    if (members[0] && members[0].section === customSection) {
+                      handleMemberChange(0, 'section', up);
+                    }
+                  }}
+                  placeholder="e.g. E or NA"
+                  className="w-full mt-2 px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 uppercase"
+                />
+              )}
+              {formErrors.section && (
+                <p className="text-xs text-rose-600 mt-1">{formErrors.section}</p>
               )}
             </div>
           </div>
@@ -511,13 +616,53 @@ export const RegistrationPage: React.FC = () => {
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">
                       Department <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={mem.department}
-                      onChange={(e) => handleMemberChange(index, 'department', e.target.value)}
-                      placeholder="e.g. CSE"
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-xs"
-                    />
+                    <select
+                      value={
+                        INSTITUTIONAL_DEPARTMENTS.some(
+                          (d) =>
+                            d.name.toLowerCase() === (mem.department || '').toLowerCase() ||
+                            d.abbreviation.toLowerCase() === (mem.department || '').toLowerCase()
+                        )
+                          ? INSTITUTIONAL_DEPARTMENTS.find(
+                              (d) =>
+                                d.name.toLowerCase() === (mem.department || '').toLowerCase() ||
+                                d.abbreviation.toLowerCase() === (mem.department || '').toLowerCase()
+                            )?.name
+                          : mem.department
+                          ? 'OTHER'
+                          : ''
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'OTHER') {
+                          handleMemberChange(index, 'department', '');
+                        } else {
+                          handleMemberChange(index, 'department', val);
+                        }
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-600 text-xs"
+                    >
+                      <option value="">Select Department</option>
+                      {INSTITUTIONAL_DEPARTMENTS.map((dept) => (
+                        <option key={dept.code} value={dept.name}>
+                          {dept.name} ({dept.abbreviation})
+                        </option>
+                      ))}
+                      <option value="OTHER">Other Department</option>
+                    </select>
+                    {!INSTITUTIONAL_DEPARTMENTS.some(
+                      (d) =>
+                        d.name.toLowerCase() === (mem.department || '').toLowerCase() ||
+                        d.abbreviation.toLowerCase() === (mem.department || '').toLowerCase()
+                    ) && (
+                      <input
+                        type="text"
+                        value={mem.department}
+                        onChange={(e) => handleMemberChange(index, 'department', e.target.value)}
+                        placeholder="Specify Department Name"
+                        className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-xs"
+                      />
+                    )}
                     {formErrors[`member_${index}_dept`] && (
                       <p className="text-[11px] text-rose-600 mt-1">
                         {formErrors[`member_${index}_dept`]}
@@ -550,13 +695,43 @@ export const RegistrationPage: React.FC = () => {
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">
                       Section <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={mem.section}
-                      onChange={(e) => handleMemberChange(index, 'section', e.target.value)}
-                      placeholder="e.g. A"
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-xs"
-                    />
+                    <select
+                      value={
+                        INSTITUTIONAL_SECTIONS.includes((mem.section || '').toUpperCase())
+                          ? (mem.section || '').toUpperCase()
+                          : mem.section
+                          ? 'OTHER'
+                          : ''
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'OTHER') {
+                          handleMemberChange(index, 'section', '');
+                        } else {
+                          handleMemberChange(index, 'section', val);
+                        }
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-600 text-xs"
+                    >
+                      <option value="">Select Section</option>
+                      {INSTITUTIONAL_SECTIONS.map((sec) => (
+                        <option key={sec} value={sec}>
+                          Section {sec}
+                        </option>
+                      ))}
+                      <option value="OTHER">Other Section</option>
+                    </select>
+                    {!INSTITUTIONAL_SECTIONS.includes((mem.section || '').toUpperCase()) && (
+                      <input
+                        type="text"
+                        value={mem.section}
+                        onChange={(e) =>
+                          handleMemberChange(index, 'section', e.target.value.toUpperCase())
+                        }
+                        placeholder="e.g. E or NA"
+                        className="w-full mt-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-xs uppercase"
+                      />
+                    )}
                     {formErrors[`member_${index}_sec`] && (
                       <p className="text-[11px] text-rose-600 mt-1">
                         {formErrors[`member_${index}_sec`]}
